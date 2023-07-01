@@ -2,10 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "crawler",
+            "name": "syncer",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "cwd": "${workspaceFolder}/syncer",
+            "program": "syncer/main.py",
         }
     ]
 }

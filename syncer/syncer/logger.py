@@ -1,8 +1,9 @@
 import sys
+
 from loguru import logger
 
 
-def init_logger():
+def init():
     logger_format = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "

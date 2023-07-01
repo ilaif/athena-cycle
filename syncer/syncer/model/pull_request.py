@@ -1,9 +1,11 @@
 import datetime
 from typing import Optional, List
+
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Index, String
 from sqlalchemy.dialects.postgresql import ARRAY
-from model.base import Base
+
+from syncer.model.base import Base
 
 
 class PullRequest(Base):

@@ -1,19 +1,22 @@
 from datetime import datetime
 from typing import List
+
 from loguru import logger
 from sqlalchemy import func
-from config import settings
-from database import engine
 from sqlalchemy.orm import Session
-from gh import gh
-from model.pull_request import PullRequest
 from sqlalchemy.dialects.postgresql import insert
+from schedule import repeat, every
+
+from syncer import database, gh
+from syncer.model.pull_request import PullRequest
+from syncer.config import settings
 
 
+@repeat(every(5).minutes)
 def sync_github_data():
     logger.info("Syncing GitHub data")
 
-    with Session(engine) as session:
+    with Session(database.engine) as session:
         for repo_name in settings.GITHUB_REPOSITORIES:
             sync_repo(repo_name, session)
 
@@ -22,7 +25,7 @@ def sync_github_data():
 
 def sync_repo(repo_name: str, session: Session):
     repo_logger = logger.bind(repo=repo_name)
-    repo_logger.info(f"Syncing {repo_name}")
+    repo_logger.info("Syncing repository")
 
     start_updated_at_str = session.query(func.max(PullRequest.updated_at)) \
         .filter(PullRequest.repo == repo_name) \
@@ -34,7 +37,7 @@ def sync_repo(repo_name: str, session: Session):
 
     values = []
     synced_pulls = 0
-    for pull in gh.get_repo(repo_name).get_pulls(
+    for pull in gh.client.get_repo(repo_name).get_pulls(
         state="all",
         sort="updated_at",
         direction="desc",
@@ -75,7 +78,7 @@ def sync_repo(repo_name: str, session: Session):
         synced_pulls += len(values)
         values = []
 
-    repo_logger.info(f"Synced {synced_pulls} PRs")
+    repo_logger.info("Finished syncing repository", synced_pulls=synced_pulls)
 
 
 def upsert(values: List[dict], session: Session):

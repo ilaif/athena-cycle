@@ -1,6 +1,7 @@
-from config import settings
 from github import Github, Auth
+
+from syncer.config import settings
 
 auth = Auth.Token(settings.GITHUB_TOKEN)
 
-gh = Github(auth=auth)
+client = Github(auth=auth)
