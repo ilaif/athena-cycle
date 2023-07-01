@@ -13,6 +13,8 @@ sqlalchemy = "^2.0.17"
 pydantic = {version = "^1.10", extras = ["dotenv"]}
 loguru = "^0.7.0"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.275"
 
 [build-system]
 requires = ["poetry-core"]
