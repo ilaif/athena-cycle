@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "crawler",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+        }
+    ]
+}
