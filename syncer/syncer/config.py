@@ -5,7 +5,10 @@ from pydantic import BaseSettings, validator
 
 
 class Settings(BaseSettings):
-    DATABASE_URI: str
+    DB_USER: str
+    DB_PASS: str
+    DB_HOST: str
+    DB_NAME: str
     DATABASE_ECHO: Optional[bool] = False
     GITHUB_TOKEN: str
     GITHUB_REPOSITORIES: List[str]

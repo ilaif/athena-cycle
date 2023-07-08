@@ -16,8 +16,8 @@ class PullRequest(Base):
     number: Mapped[int]
     title: Mapped[str]
     state: Mapped[str]
-    created_at: Mapped[str]
-    updated_at: Mapped[str] = mapped_column(String, index=True)
+    created_at: Mapped[Optional[datetime.datetime]]
+    updated_at: Mapped[Optional[datetime.datetime]]
     closed_at: Mapped[Optional[datetime.datetime]]
     merged_at: Mapped[Optional[datetime.datetime]]
     requested_reviewers: Mapped[List[str]] = mapped_column(ARRAY(String))
@@ -25,9 +25,10 @@ class PullRequest(Base):
     labels: Mapped[List[str]] = mapped_column(ARRAY(String))
     draft: Mapped[bool]
     base: Mapped[str]
-    user: Mapped[Optional[str]]
+    username: Mapped[Optional[str]]
     merged: Mapped[bool]
+    head_ref: Mapped[str]
 
 
-Index("idx_updated_at", PullRequest.updated_at)
-Index("idx_repo", PullRequest.repo)
+Index("idx_pull_request_updated_at", PullRequest.updated_at)
+Index("idx_pull_request_repo", PullRequest.repo)

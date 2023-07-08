@@ -12,6 +12,7 @@ pygithub = "^1.59.0"
 sqlalchemy = "^2.0.17"
 pydantic = {version = "^1.10", extras = ["dotenv"]}
 loguru = "^0.7.0"
+alembic = "^1.11.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.275"

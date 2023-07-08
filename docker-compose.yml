@@ -1,6 +1,7 @@
 version: '3.8'
 services:
-  db:
+
+  postgresql:
     image: postgres:15.3
     restart: unless-stopped
     environment:
@@ -10,15 +11,31 @@ services:
       - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
+
   appsmith:
     image: index.docker.io/appsmith/appsmith-ce
-    container_name: appsmith
     ports:
       - "8000:80"
-      # - "443:443"
+      - "443:443"
     volumes:
       - ./stacks:/appsmith-stacks
     restart: unless-stopped
+
+  autoupdate:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 300 --label-enable --cleanup
+
+  syncer:
+    build:
+      context: syncer
+    env_file: syncer/.env
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - DB_HOST=postgresql
+
 volumes:
+
   db:
     driver: local

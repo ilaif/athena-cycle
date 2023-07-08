@@ -2,3 +2,5 @@
 .venv
 stacks/
 *.pyc
+.ruff_cache/
+deployment/
