@@ -63,7 +63,8 @@ def sync_pull_requests(repo_name: str, session: Session) -> list[PullRequest]:
 
         for pr in prs:
             reviews = [gh_review_to_dict(review, pr) for review in pr.get_reviews()]
-            repo_logger.debug("Syncing reviews for pull request", pr=pr.number, reviews=len(reviews))
+            repo_logger.debug("Syncing reviews for pull request",
+                              pr=pr.number, reviews=len(reviews))
             upsert(Review, reviews, session)
 
         synced_pr_ids += [pr.id for pr in prs]
