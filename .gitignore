@@ -4,3 +4,4 @@ stacks/
 *.pyc
 .ruff_cache/
 deployment/
+metabase-data/

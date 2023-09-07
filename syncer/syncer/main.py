@@ -3,7 +3,8 @@ import time
 import schedule
 from loguru import logger
 
-from syncer import jobs, database, logger as my_logger
+from syncer import github_jobs, jira_jobs, logger as my_logger
+from syncer.adapters import database
 
 
 def main() -> None:
@@ -13,7 +14,8 @@ def main() -> None:
     database.init()
 
     logger.info("Starting first sync")
-    jobs.sync_github_data()
+    jira_jobs.sync()
+    github_jobs.sync()
 
     logger.info("Starting scheduler")
     while True:

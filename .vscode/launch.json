@@ -5,8 +5,9 @@
             "name": "syncer",
             "type": "python",
             "request": "launch",
+            "justMyCode": false,
             "cwd": "${workspaceFolder}/syncer",
-            "program": "syncer/main.py",
+            "program": "syncer/main.py"
         }
     ]
 }

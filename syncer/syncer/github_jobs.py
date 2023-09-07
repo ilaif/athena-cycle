@@ -1,5 +1,4 @@
 from datetime import datetime
-import itertools
 from typing import List
 
 from loguru import logger
@@ -8,14 +7,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from schedule import repeat, every
 
-from syncer import database, gh
+from syncer.adapters import database, gh
 from syncer.model.pull_request import PullRequest
 from syncer.config import settings
 from syncer.model.review import Review
+from syncer.utils import chunked_iterable
 
 
 @repeat(every(5).minutes)
-def sync_github_data():
+def sync():
     logger.info("Syncing GitHub data")
 
     with Session(database.engine) as session:
@@ -44,28 +44,25 @@ def sync_pull_requests(repo_name: str, session: Session) -> list[PullRequest]:
         state="all", sort="updated_at", direction="desc",
     ), size=50)
     synced_pr_ids = []
-    for prs_chunk in chunked_prs:
-        repo_logger.debug("Syncing chunk of pull requests", chunk_size=len(prs_chunk))
+    for chunk in chunked_prs:
+        repo_logger.debug("Syncing chunk of pull requests", chunk_size=len(chunk))
 
         prs = []
         should_stop = False
-        for pr in prs_chunk:
-            if pr.state == "closed" and not pr.merged:
-                # We don't need to sync closed PRs that are closed and  were not merged
-                continue
+        for pr in chunk:
             if start_updated_at and pr.updated_at < start_updated_at:
                 # Stop if we've reached the last updated PR
                 should_stop = True
                 break
             prs.append(pr)
 
-        upsert(PullRequest, [gh_pr_to_dict(pr) for pr in prs], session)
+        database.upsert_by_id_col(PullRequest, [gh_pr_to_dict(pr) for pr in prs], session)
 
         for pr in prs:
             reviews = [gh_review_to_dict(review, pr) for review in pr.get_reviews()]
             repo_logger.debug("Syncing reviews for pull request",
                               pr=pr.number, reviews=len(reviews))
-            upsert(Review, reviews, session)
+            database.upsert_by_id_col(Review, reviews, session)
 
         synced_pr_ids += [pr.id for pr in prs]
 
@@ -110,20 +107,6 @@ def gh_review_to_dict(review, pr) -> dict:
     }
 
 
-def upsert(model, values: List[dict], session: Session):
-    if len(values) == 0:
-        return
-
-    stmt = insert(model).values(values)
-    id_col = "id"
-    stmt = stmt.on_conflict_do_update(
-        index_elements=[id_col],
-        set_={key: stmt.excluded[key] for key in values[0].keys() if key != id_col}
-    )
-    session.execute(stmt)
-    session.commit()
-
-
 def get_update_at_start_for_sync(model, repo_name: str, session: Session):
     start_updated_at_result = session.query(func.max(model.updated_at)) \
         .filter(model.repo == repo_name) \
@@ -137,12 +120,3 @@ def get_update_at_start_for_sync(model, repo_name: str, session: Session):
         start_updated_at = min(settings.GITHUB_SYNC_FROM, start_updated_at)
 
     return start_updated_at
-
-
-def chunked_iterable(iterable, size):
-    it = iter(iterable)
-    while True:
-        chunk = tuple(itertools.islice(it, size))
-        if not chunk:
-            break
-        yield chunk

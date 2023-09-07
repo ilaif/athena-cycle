@@ -33,7 +33,16 @@ services:
     env_file: syncer/.env
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
       - DB_HOST=postgresql
+
+  metabase:
+    image: metabase/metabase:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./metabase-data:/metabase
 
 volumes:
 

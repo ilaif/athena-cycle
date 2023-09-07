@@ -13,6 +13,7 @@ sqlalchemy = "^2.0.17"
 pydantic = {version = "^1.10", extras = ["dotenv"]}
 loguru = "^0.7.0"
 alembic = "^1.11.1"
+atlassian-python-api = "^3.40.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.275"
