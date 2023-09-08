@@ -61,7 +61,8 @@ def sync_issues(project_key: str, session: Session) -> list[JiraIssue]:
                 break
             issues.append(jira_issue)
 
-        proj_logger.debug("Synced chunk of jira issues", size=len(issues), last_updated=last_updated)
+        proj_logger.debug("Synced chunk of jira issues",
+                          size=len(issues), last_updated=last_updated)
 
         database.upsert_by_id_col(JiraIssue, issues, session)
 
@@ -80,14 +81,16 @@ def map_jira_issue(issue) -> dict:
         "key": issue["key"],
         "issue_type": issue["fields"]["issuetype"]["name"],
         "project_key": issue["fields"]["project"]["key"],
-        "resolution": issue["fields"]["resolution"]["name"] if issue["fields"]["resolution"] else None,
+        "resolution": (issue["fields"]["resolution"]["name"]
+                       if issue["fields"]["resolution"] else None),
         "resolution_date": datetime.fromisoformat(resolution_date) if resolution_date else None,
         "summary": issue["fields"]["summary"],
         "created": datetime.fromisoformat(issue["fields"]["created"]),
         "updated": datetime.fromisoformat(issue["fields"]["updated"]),
         "priority": issue["fields"]["priority"]["name"],
         "labels": [label for label in issue["fields"]["labels"]],
-        "assignee_email": issue["fields"]["assignee"]["emailAddress"] if issue["fields"]["assignee"] else None,
+        "assignee_email": (issue["fields"]["assignee"]["emailAddress"]
+                           if issue["fields"]["assignee"] else None),
         "status": issue["fields"]["status"]["name"],
         "reporter_email": issue["fields"]["reporter"]["emailAddress"],
         "sprint_name": take_most_relevant_sprint(issue["fields"]["customfield_10020"]),

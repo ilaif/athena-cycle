@@ -1,10 +1,8 @@
 from datetime import datetime
-from typing import List
 
 from loguru import logger
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from sqlalchemy.dialects.postgresql import insert
 from schedule import repeat, every
 
 from syncer.adapters import database, gh
