@@ -1,6 +1,6 @@
 version: '3.8'
-services:
 
+services:
   postgresql:
     image: postgres:15.3
     restart: unless-stopped
@@ -8,15 +8,15 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db:/var/lib/postgresql/data
 
   appsmith:
     image: index.docker.io/appsmith/appsmith-ce
     ports:
-      - "8000:80"
-      - "443:443"
+      - '8000:80'
+      - '443:443'
     volumes:
       - ./stacks:/appsmith-stacks
     restart: unless-stopped
@@ -40,11 +40,10 @@ services:
   metabase:
     image: metabase/metabase:latest
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./metabase-data:/metabase
 
 volumes:
-
   db:
     driver: local

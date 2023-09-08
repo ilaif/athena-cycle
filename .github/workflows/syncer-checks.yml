@@ -1,4 +1,4 @@
-name: syncer
+name: syncer-checks
 on:
   push:
     branches: [main]

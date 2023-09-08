@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: syncer
+  template:
+    metadata:
+      labels:
+        app: syncer
+    spec:
+      containers:
+        - name: syncer
+          image: ifallach/athena-cycle-syncer:latest
+          imagePullPolicy: Always
+          env:
+            - name: GITHUB_REPOSITORIES
+              value: '["org/repo-name"]'
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: GITHUB_TOKEN
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: POSTGRES_USER
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: POSTGRES_PASSWORD
+            - name: DB_HOST
+              value: postgresql
+            - name: DB_NAME
+              value: postgres
+            - name: JIRA_PROJECTS
+              value: '["CDE"]'
+            - name: JIRA_SITE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: jira-secret
+                  key: JIRA_SITE_URL
+            - name: JIRA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jira-secret
+                  key: JIRA_USERNAME
+            - name: JIRA_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jira-secret
+                  key: JIRA_API_TOKEN
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
