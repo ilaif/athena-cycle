@@ -14,11 +14,11 @@ spec:
     spec:
       containers:
         - name: syncer
-          image: ifallach/athena-cycle-syncer:latest
+          image: ifallach/athena-cycle-syncer:main
           imagePullPolicy: Always
           env:
             - name: GITHUB_REPOSITORIES
-              value: '["org/repo-name"]'
+              value: '["org/repo-name"]' # Replace with your repository names
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:

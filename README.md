@@ -66,7 +66,10 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
     helm upgrade --install appsmith appsmith/appsmith -n athena-cycle
     ```
 
-5. Install syncer: `kustomize build ./deployment | kubectl apply -f -`
+5. Install syncer:
+   1. cd to `syncer/`
+   2. Populate `GITHUB_REPOSITORIES` in `deployment/syncer.yml`
+   3. Run `kustomize build ./deployment | kubectl apply -f -`
 
 6. Fork the appsmith application `https://github.com/ilaif/athena-cycle-appsmith`
 
