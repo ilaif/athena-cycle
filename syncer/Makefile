@@ -1,5 +1,3 @@
-include .env
-
 lint:
 	poetry run ruff check .
 
