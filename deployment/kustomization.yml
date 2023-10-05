@@ -1,3 +1,4 @@
 namespace: athena-cycle
 resources:
   - syncer.yml
+  - postgresql.yml
