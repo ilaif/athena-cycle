@@ -14,6 +14,10 @@ from syncer.config import settings
 def sync():
     logger.info("Syncing jira data")
 
+    if settings.JIRA_API_TOKEN is None:
+        logger.warning("Jira token not set, skipping sync")
+        return
+
     with Session(database.engine) as session:
         for project_key in settings.JIRA_PROJECTS:
             sync_project(project_key, session)

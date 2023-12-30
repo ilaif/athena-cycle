@@ -16,11 +16,14 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
 
 1. Export the following environment variables:
    1. GitHub integration:
-      1. Get a GITHUB_TOKEN
+      1. Get a `GITHUB_TOKEN`
+      2. Set `GITHUB_REPOSITORIES` to a JSON list of repositories to sync (e.g. `["appsmithorg/appsmith", "appsmithorg/appsmith-server"]`)
    2. Jira integration:
-      1. Get your JIRA_USERNAME
-      2. Get a JIRA_API_TOKEN
-2. Run `docker-compose up -d`
+      1. Get your `JIRA_SITE_URL`
+      2. Get your `JIRA_USERNAME`
+      3. Get a `JIRA_API_TOKEN`
+2. Run `touch syncer/.env` (You can also use that to provide the environment variables)
+3. Run `docker-compose up -d`
 
 #### Kubernetes
 

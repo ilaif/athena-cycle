@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgresql:
@@ -7,16 +7,18 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
     ports:
-      - '5432:5432'
+      - "5433:5432"
     volumes:
       - db:/var/lib/postgresql/data
 
   appsmith:
     image: index.docker.io/appsmith/appsmith-ce
+    depends_on: [postgresql]
     ports:
-      - '8000:80'
-      - '443:443'
+      - "8000:80"
+      # - '443:443'
     volumes:
       - ./stacks:/appsmith-stacks
     restart: unless-stopped
@@ -30,19 +32,23 @@ services:
   syncer:
     build:
       context: syncer
+    depends_on: [postgresql]
     env_file: syncer/.env
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - JIRA_USERNAME=${JIRA_USERNAME}
       - JIRA_API_TOKEN=${JIRA_API_TOKEN}
       - DB_HOST=postgresql
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASS=postgres
 
-  metabase:
-    image: metabase/metabase:latest
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./metabase-data:/metabase
+  # metabase:
+  #   image: metabase/metabase:latest
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - ./metabase-data:/metabase
 
 volumes:
   db:

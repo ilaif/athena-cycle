@@ -11,14 +11,14 @@ class Settings(BaseSettings):
     DB_NAME: str
     DATABASE_ECHO: Optional[bool] = False
 
-    GITHUB_TOKEN: str
-    GITHUB_REPOSITORIES: List[str]
+    GITHUB_TOKEN: Optional[str] = None
+    GITHUB_REPOSITORIES: Optional[List[str]] = []
     GITHUB_SYNC_FROM: Optional[datetime] = None
 
-    JIRA_SITE_URL: str
-    JIRA_USERNAME: str
-    JIRA_API_TOKEN: str
-    JIRA_PROJECTS: List[str]
+    JIRA_SITE_URL: Optional[str] = None
+    JIRA_USERNAME: Optional[str] = None
+    JIRA_API_TOKEN: Optional[str] = None
+    JIRA_PROJECTS: Optional[List[str]] = []
     JIRA_SYNC_FROM: Optional[datetime] = None
     JIRA_FORCE_RESYNC_FROM: Optional[datetime] = None
 

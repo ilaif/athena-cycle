@@ -16,6 +16,15 @@ from syncer.utils import chunked_iterable
 def sync():
     logger.info("Syncing GitHub data")
 
+    logger.warning(f"GitHub token: {settings.GITHUB_TOKEN}")
+    if settings.GITHUB_TOKEN is None:
+        logger.warning("GitHub token not set, skipping sync")
+        return
+
+    if len(settings.GITHUB_REPOSITORIES) == 0:
+        logger.warning("No GitHub repositories set, skipping sync")
+        return
+
     with Session(database.engine) as session:
         for repo_name in settings.GITHUB_REPOSITORIES:
             sync_repo(repo_name, session)
