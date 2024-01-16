@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_HOST: str
+    DB_PORT: int = 5432
     DB_NAME: str
     DATABASE_ECHO: Optional[bool] = False
 
@@ -26,9 +27,9 @@ class Settings(BaseSettings):
         case_sensitive = True
         env_file = ".env"
 
-        @validator('GITHUB_SYNC_FROM', 'JIRA_SYNC_FROM', 'JIRA_FORCE_RESYNC_FROM', pre=True)
+        @validator("GITHUB_SYNC_FROM", "JIRA_SYNC_FROM", "JIRA_FORCE_RESYNC_FROM", pre=True)
         def time_validate(cls, v):
-            return datetime.strptime(v, '%Y-%m-%d')
+            return datetime.strptime(v, "%Y-%m-%d")
 
 
 settings = Settings()

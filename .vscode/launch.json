@@ -1,13 +1,14 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "syncer",
-            "type": "python",
-            "request": "launch",
-            "justMyCode": false,
-            "cwd": "${workspaceFolder}/syncer",
-            "program": "syncer/main.py"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "syncer",
+      "type": "python",
+      "request": "launch",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}/syncer",
+      "program": "syncer/main.py",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
 }

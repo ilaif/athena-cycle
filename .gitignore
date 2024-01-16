@@ -4,6 +4,7 @@
 stacks/
 
 *.pyc
+__pycache__/
 .ruff_cache/
 
 metabase-data/

@@ -28,6 +28,11 @@ class PullRequest(Base):
     username: Mapped[Optional[str]]
     merged: Mapped[bool]
     head_ref: Mapped[str]
+    last_ready_for_review_at: Mapped[Optional[datetime.datetime]]
+    first_reviewed_at: Mapped[Optional[datetime.datetime]]
+    additions: Mapped[int]
+    deletions: Mapped[int]
+    changed_files: Mapped[int]
 
 
 Index("idx_pull_request_updated_at", PullRequest.updated_at)

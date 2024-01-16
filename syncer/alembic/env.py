@@ -15,6 +15,7 @@ section = config.config_ini_section
 config.set_section_option(section, "DB_USER", os.environ.get("DB_USER"))
 config.set_section_option(section, "DB_PASS", os.environ.get("DB_PASS"))
 config.set_section_option(section, "DB_HOST", os.environ.get("DB_HOST"))
+config.set_section_option(section, "DB_PORT", os.environ.get("DB_PORT"))
 config.set_section_option(section, "DB_NAME", os.environ.get("DB_NAME"))
 
 # Interpret the config file for Python logging.
@@ -72,9 +73,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
