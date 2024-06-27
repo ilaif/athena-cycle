@@ -2,31 +2,28 @@ package github
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
 func upsertPullRequests(ctx context.Context, db *sqlx.DB, pullRequests []*pullRequest) error {
-	tx, err := db.BeginTxx(ctx, &sql.TxOptions{})
-	if err != nil {
-		return errors.Wrap(err, "failed to begin transaction")
+	if len(pullRequests) == 0 {
+		return nil
 	}
-	defer func() { _ = tx.Rollback() }()
-
-	if _, err := tx.NamedExec(`
+	if _, err := db.NamedExecContext(ctx, `
 			INSERT INTO pull_requests (
-				pr_id, repo, repo_id, username, title, body, state, draft,
+				pr_id, repo, repo_id, number, username, title, body, state, draft,
 				merged_at, created_at, updated_at, last_ready_for_review_at, data
 			)
 			VALUES (
-				:pr_id, :repo, :repo_id, :username, :title, :body, :state, :draft,
+				:pr_id, :repo, :repo_id, :number, :username, :title, :body, :state, :draft,
 				:merged_at, :created_at, :updated_at, :last_ready_for_review_at, :data
 			)
 			ON CONFLICT (pr_id) DO UPDATE
 			SET repo = EXCLUDED.repo,
 				repo_id = EXCLUDED.repo_id,
+				number = EXCLUDED.number,
 				username = EXCLUDED.username,
 				title = EXCLUDED.title,
 				body = EXCLUDED.body,
@@ -41,21 +38,14 @@ func upsertPullRequests(ctx context.Context, db *sqlx.DB, pullRequests []*pullRe
 	); err != nil {
 		return errors.Wrap(err, "failed to insert pull request")
 	}
-	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "failed to commit transaction")
-	}
 	return nil
 }
 
 func upsertPullRequestReviews(ctx context.Context, db *sqlx.DB, reviews []*pullRequestReview) error {
-	tx, err := db.BeginTxx(ctx, &sql.TxOptions{})
-	if err != nil {
-		return errors.Wrap(err, "failed to begin transaction")
+	if len(reviews) == 0 {
+		return nil
 	}
-	defer func() { _ = tx.Rollback() }()
-
-	for _, review := range reviews {
-		if _, err := tx.NamedExec(`
+	if _, err := db.NamedExecContext(ctx, `
 			INSERT INTO pull_request_reviews (review_id, pr_id, repo, username, state, submitted_at, commit_id, data)
 			VALUES (:review_id, :pr_id, :repo, :username, :state, :submitted_at, :commit_id, :data)
 			ON CONFLICT (review_id) DO UPDATE
@@ -66,13 +56,9 @@ func upsertPullRequestReviews(ctx context.Context, db *sqlx.DB, reviews []*pullR
 				submitted_at = EXCLUDED.submitted_at,
 				commit_id = EXCLUDED.commit_id,
 				data = EXCLUDED.data
-			`, review,
-		); err != nil {
-			return errors.Wrap(err, "failed to insert pull request review")
-		}
-	}
-	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "failed to commit transaction")
+			`, reviews,
+	); err != nil {
+		return errors.Wrap(err, "failed to insert pull request review")
 	}
 	return nil
 }

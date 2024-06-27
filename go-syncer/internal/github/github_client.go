@@ -18,15 +18,15 @@ type RotatableGithubClient struct {
 
 func newRotatableClient(ctx context.Context, token string) *RotatableGithubClient {
 	return &RotatableGithubClient{
-		Client: newClient(ctx, token),
+		Client: NewClient(ctx, token),
 	}
 }
 
 func (c *RotatableGithubClient) SetToken(ctx context.Context, token string) {
-	c.Client = newClient(ctx, token)
+	c.Client = NewClient(ctx, token)
 }
 
-func newClient(ctx context.Context, token string) *github.Client {
+func NewClient(ctx context.Context, token string) *github.Client {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)

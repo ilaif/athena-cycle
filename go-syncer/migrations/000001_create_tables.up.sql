@@ -5,6 +5,7 @@ CREATE TABLE
     pr_id INT UNIQUE,
     repo TEXT,
     repo_id INT,
+    number INT,
     username TEXT,
     title TEXT,
     body TEXT,
