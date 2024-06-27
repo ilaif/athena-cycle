@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgresql:
-    image: postgres:15.3
+    image: postgres:16.3
     restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
@@ -14,7 +14,7 @@ services:
       - db:/var/lib/postgresql/data
 
   appsmith:
-    image: index.docker.io/appsmith/appsmith-ce
+    image: index.docker.io/appsmith/appsmith-ce:latest
     depends_on: [postgresql]
     ports:
       - "8000:80"
@@ -29,25 +29,36 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 300 --label-enable --cleanup
 
+  # syncer: # python version
+  #   build:
+  #     context: syncer
+  #   depends_on: [postgresql]
+  #   env_file: syncer/.env
+  #   restart: always
+  #   environment:
+  #     - JIRA_USERNAME=${JIRA_USERNAME:-}
+  #     - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
+  #     - DB_HOST=postgresql
+  #     - DB_PORT=5432
+  #     - DB_NAME=postgres
+  #     - DB_USER=postgres
+  #     - DB_PASS=postgres
+
   syncer:
     build:
-      context: syncer
+      context: go-syncer
     depends_on: [postgresql]
-    env_file: syncer/.env
+    env_file: go-syncer/.env
+    restart: always
     environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-      - JIRA_USERNAME=${JIRA_USERNAME:-}
-      - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
-      - DB_HOST=postgresql
-      - DB_PORT=5432
-      - DB_NAME=postgres
-      - DB_USER=postgres
-      - DB_PASS=postgres
+      - PG_URL=postgres://postgres:postgres@postgresql:5432/postgres?sslmode=disable
+      - GITHUB_REPOSITORIES=PointFiveInc/pointfive
+      - GITHUB_TOKENS=${GITHUB_TOKEN:-}
 
   # metabase:
   #   image: metabase/metabase:latest
   #   ports:
-  #     - '3000:3000'
+  #     - "3000:3000"
   #   volumes:
   #     - ./metabase-data:/metabase
 

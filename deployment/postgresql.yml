@@ -31,18 +31,11 @@ spec:
           env:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
-            - name: POSTGRES_USER
+            - name: POSTGRES_URI
               valueFrom:
                 secretKeyRef:
-                  name: postgresql-secret
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgresql-secret
-                  key: POSTGRES_PASSWORD
-            - name: POSTGRES_DB
-              value: postgres
+                  name: postgres-uri
+                  key: POSTGRES_URI
           volumeMounts:
             - name: postgresql-storage
               mountPath: /var/lib/postgresql/data
@@ -61,7 +54,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql
+  name: postgres
 spec:
   selector:
     app: postgresql

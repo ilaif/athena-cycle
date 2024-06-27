@@ -17,44 +17,36 @@ spec:
           image: ifallach/athena-cycle-syncer:main
           imagePullPolicy: Always
           env:
+            # TODO: update this
             - name: GITHUB_REPOSITORIES
-              value: '["org/repo-name"]' # Replace with your repository names
-            - name: GITHUB_TOKEN
+              value: "org/repo-name" # Replace with your repository names
+            - name: GITHUB_TOKENS
               valueFrom:
                 secretKeyRef:
                   name: github-token
                   key: GITHUB_TOKEN
-            - name: DB_USER
+            - name: DB_POSTGRES_URI
               valueFrom:
                 secretKeyRef:
-                  name: postgresql-secret
-                  key: POSTGRES_USER
-            - name: DB_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: postgresql-secret
-                  key: POSTGRES_PASSWORD
-            - name: DB_HOST
-              value: postgresql
-            - name: DB_NAME
-              value: postgres
-            - name: JIRA_PROJECTS
-              value: '["CDE"]'
-            - name: JIRA_SITE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: jira-secret
-                  key: JIRA_SITE_URL
-            - name: JIRA_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: jira-secret
-                  key: JIRA_USERNAME
-            - name: JIRA_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: jira-secret
-                  key: JIRA_API_TOKEN
+                  name: postgres-uri
+                  key: POSTGRES_URI
+            # - name: JIRA_PROJECTS
+            #   value: '["CDE"]'
+            # - name: JIRA_SITE_URL
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: jira-secret
+            #       key: JIRA_SITE_URL
+            # - name: JIRA_USERNAME
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: jira-secret
+            #       key: JIRA_USERNAME
+            # - name: JIRA_API_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: jira-secret
+            #       key: JIRA_API_TOKEN
           resources:
             requests:
               cpu: "100m"

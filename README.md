@@ -5,7 +5,7 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
 ## Components
 
 1. A postgres database
-2. Syncer
+2. Syncer (Syncs data from GitHub)
 3. An appsmith frontend
 
 ## Installation
@@ -17,11 +17,7 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
 1. Export the following environment variables:
    1. GitHub integration:
       1. Get a `GITHUB_TOKEN`
-      2. Set `GITHUB_REPOSITORIES` to a JSON list of repositories to sync (e.g. `["appsmithorg/appsmith", "appsmithorg/appsmith-server"]`)
-   2. Jira integration:
-      1. Get your `JIRA_SITE_URL`
-      2. Get your `JIRA_USERNAME`
-      3. Get a `JIRA_API_TOKEN`
+      2. Set `GITHUB_REPOSITORIES` to a JSON list of repositories to sync (e.g. `appsmithorg/appsmith,appsmithorg/appsmith-server`)
 2. Run `touch syncer/.env` (You can also use that to provide the environment variables)
 3. Run `docker-compose up -d`
 
@@ -31,45 +27,36 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
 
 1. Have a postgres database running
 2. `kubectl create ns athena-cycle`
-3. Create the secrets `github-token`, `postgresql-secret`, `jira-secret`
+3. Create the secrets `github-token`, `postgres-uri`
 
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: github-token
-    type: Opaque
-      GITHUB_TOKEN: <GITHUB_TOKEN>
-    ---
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: postgresql-secret
-    type: Opaque
-      POSTGRES_USER: <POSTGRES_USER>
-      POSTGRES_PASSWORD: <POSTGRES_PASSWORD>
-      DB_HOST: <DB_HOST>
-      DB_NAME: <DB_NAME>
-    ---
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: jira-secret
-    type: Opaque
-      JIRA_SITE_URL: <JIRA_SITE_URL>
-      JIRA_USERNAME: <JIRA_USERNAME>
-      JIRA_API_TOKEN: <JIRA_API_TOKEN>
-    ```
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: github-token
+   type: Opaque
+     GITHUB_TOKEN: <GITHUB_TOKEN>
+   ---
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: postgres-uri
+   type: Opaque
+     POSTGRES_URI: <POSTGRES_URI>
+   ```
+
+   > `<POSTGRES_URI>` is in the format: `postgres://<username>:<password>@<host>:<port>/<database>?sslmode=disable`
 
 4. Install appsmith:
 
-    ```sh
-    helm repo add appsmith https://helm.appsmith.com
-    helm repo update
-    helm upgrade --install appsmith appsmith/appsmith -n athena-cycle
-    ```
+   ```sh
+   helm repo add appsmith https://helm.appsmith.com
+   helm repo update
+   helm upgrade --install appsmith appsmith/appsmith -n athena-cycle
+   ```
 
 5. Install syncer:
+
    1. cd to `syncer/`
    2. Populate `GITHUB_REPOSITORIES` in `deployment/syncer.yml`
    3. Run `kustomize build ./deployment | kubectl apply -f -`

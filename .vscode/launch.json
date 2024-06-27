@@ -3,12 +3,20 @@
   "configurations": [
     {
       "name": "syncer",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "justMyCode": false,
       "cwd": "${workspaceFolder}/syncer",
       "program": "syncer/main.py",
       "envFile": "${workspaceFolder}/.env"
-    }
+    },
+    {
+      "name": "go-syncer",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/go-syncer/cmd/syncer",
+      "envFile": "${workspaceFolder}/go-syncer/.env"
+    },
   ]
 }

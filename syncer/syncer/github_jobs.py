@@ -76,7 +76,7 @@ def sync_pull_requests(repo_name: str) -> list[PullRequest]:
         return False, pr_dict["id"]
 
     synced_pr_ids = []
-    with ThreadPool(5) as p:
+    with ThreadPool(3) as p:
         should_stop = False
         for chunk in chunked_prs:
             repo_logger.debug("Syncing chunk of pull requests", chunk_size=len(chunk))
