@@ -41,7 +41,9 @@ func listEntities[T any](ctx context.Context,
 	log.Info("Listing entities", "entity", fmt.Sprintf("%T", new(T)))
 	client := newRotatableClient(ctx, tokenManager.GetToken())
 	reviews, resp, err := listFunc(ctx, client.Client)
-	log.Info("Rate limit remaining", "remaining", resp.Rate.Remaining)
+	if resp != nil {
+		log.Info("Rate limit remaining", "remaining", resp.Rate.Remaining)
+	}
 	if err != nil {
 		if resp != nil {
 			if err := handleRateLimit(ctx, resp, tokenManager); err != nil {
