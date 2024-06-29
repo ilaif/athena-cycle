@@ -42,16 +42,14 @@ func listEntities[T any](ctx context.Context,
 	client := newRotatableClient(ctx, tokenManager.GetToken())
 	reviews, resp, err := listFunc(ctx, client.Client)
 	if resp != nil {
-		log.Info("Rate limit remaining", "remaining", resp.Rate.Remaining)
+		log.V(1).Info("Rate limit remaining", "remaining", resp.Rate.Remaining)
 	}
 	if err != nil {
 		if resp != nil {
 			if err := handleRateLimit(ctx, resp, tokenManager); err != nil {
 				return nil, resp, err
 			}
-			if !tokenManager.IsExhausted() {
-				return listEntities(ctx, tokenManager, repo, listFunc)
-			}
+			return listEntities(ctx, tokenManager, repo, listFunc)
 		}
 		return nil, resp, errors.Wrap(err, "failed to list pull request reviews")
 	}

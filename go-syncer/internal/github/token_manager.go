@@ -2,6 +2,7 @@ package github
 
 import (
 	"sync"
+	"time"
 )
 
 type TokenManager struct {
@@ -49,4 +50,11 @@ func (tm *TokenManager) ResetExhaustion() {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 	tm.exhausted = false
+}
+
+func (tm *TokenManager) WaitForRateLimitReset(duration time.Duration) {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	time.Sleep(duration)
 }

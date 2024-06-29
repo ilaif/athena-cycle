@@ -58,13 +58,20 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 	if err != nil {
 		return err
 	}
-	log.Info("Last synced time", "last_synced", lastSynced)
+
+	direction := "asc"
+	if lastSynced != nil {
+		log.Info("Last synced time found, syncing from latest to last sync time", "last_synced", lastSynced)
+		direction = "desc"
+	} else {
+		log.Info("No last synced time found, starting from the first page")
+	}
 
 	opt := &github.PullRequestListOptions{
 		ListOptions: github.ListOptions{PerPage: prsPerPage},
 		State:       "all",
 		Sort:        "updated",
-		Direction:   "desc",
+		Direction:   direction,
 	}
 
 	var latestPr *pullRequest
@@ -78,35 +85,50 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 		if err != nil {
 			return errors.Wrap(err, "failed to list pull requests")
 		}
-		if len(prs) == 0 {
+		// Filter out pull requests that were already synced
+		prsToSync := lo.Filter(prs, func(pr *github.PullRequest, _ int) bool {
+			if lastSynced == nil {
+				return true
+			}
+			return pr.GetUpdatedAt().After(*lastSynced)
+		})
+		if len(prsToSync) == 0 {
+			log.Info("No new pull requests found")
 			break
 		}
 
-		pullRequests, err := syncPullRequestsChunk(ctx, db, tokenManager, repo, prs)
+		pullRequests, err := syncPullRequestsChunk(ctx, db, tokenManager, repo, prsToSync)
 		if err != nil {
 			return errors.Wrap(err, "failed to sync pull requests chunk")
 		}
 		log.Info("Synced pull requests", "prs", len(pullRequests), "page", opt.Page, "last_pr_updated_at", pullRequests[0].UpdatedAt)
 
+		if direction == "desc" { // If we're syncing in descending order, we need to stop when we reach the last synced time
+			if latestPr == nil {
+				latestPr = pullRequests[0] // The latest PR is the first one in the first page
+			}
+		} else {
+			latestPr = pullRequests[len(pullRequests)-1]
+			log.Info("Updating last synced time", "last_synced", latestPr.UpdatedAt)
+			if err := pg.UpdateLastSyncAt(ctx, db, repo.GetFullName(), latestPr.UpdatedAt); err != nil {
+				return errors.Wrap(err, "failed to update last synced time")
+			}
+		}
+
+		if len(prsToSync) < len(prs) { // If we filtered, it means we reached the last page
+			log.Info("Reached last synced time", "last_synced", lastSynced)
+			break
+		}
 		if resp.NextPage == 0 {
 			break
 		}
 		opt.Page = resp.NextPage
-
-		if latestPr == nil {
-			latestPr = pullRequests[0]
-		}
-
-		earliestPr := pullRequests[len(pullRequests)-1]
-		if earliestPr.UpdatedAt.Before(lastSynced) {
-			log.Info("Reached last synced time", "last_synced", lastSynced)
-			break
-		}
 	}
 
-	log.Info("Updating last synced time", "last_synced", latestPr.UpdatedAt)
-	if err := pg.UpdateLastSyncAt(ctx, db, repo.GetFullName(), latestPr.UpdatedAt); err != nil {
-		return errors.Wrap(err, "failed to update last synced time")
+	if latestPr != nil {
+		if err := pg.UpdateLastSyncAt(ctx, db, repo.GetFullName(), latestPr.UpdatedAt); err != nil {
+			return errors.Wrap(err, "failed to update last synced time")
+		}
 	}
 
 	return nil

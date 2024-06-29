@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-func GetLastSyncAt(ctx context.Context, db *sqlx.DB, repo string) (time.Time, error) {
-	var lastSynced time.Time
+func GetLastSyncAt(ctx context.Context, db *sqlx.DB, repo string) (*time.Time, error) {
+	var lastSynced *time.Time
 	err := db.GetContext(ctx, &lastSynced, `SELECT last_synced FROM sync_status WHERE repo = $1`, repo)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return time.Time{}, errors.Wrap(err, "failed to get last synced time")
+		return nil, errors.Wrap(err, "failed to get last synced time")
 	}
 	return lastSynced, nil
 }
