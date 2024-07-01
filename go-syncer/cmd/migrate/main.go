@@ -43,13 +43,24 @@ func main() {
 		log.Error(err, "Failed to create migrate instance")
 		return
 	}
+	defer migrator.Close()
 	migrator.Log = &migrateLogger{log: log}
 
 	log = log.WithValues("direction", direction)
 
 	migrationFunc := migrator.Up
 	if direction == Down {
-		migrationFunc = migrator.Down
+		ver, _, err := migrator.Version()
+		if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
+			log.Error(err, "Failed to get migration version")
+			return
+		}
+		migrationFunc = func() error {
+			if ver == 1 {
+				return migrator.Down()
+			}
+			return migrator.Migrate(ver - 1)
+		}
 	}
 	log.Info("Running migrations")
 	if err := migrationFunc(); err != nil && !errors.Is(err, migrate.ErrNoChange) {

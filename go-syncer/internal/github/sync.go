@@ -16,10 +16,12 @@ import (
 )
 
 const (
+	syncBackTime       = 6 * 30 * 24 * time.Hour
 	prSyncConcurrency  = 3
 	prsPerPage         = 100
 	issueEventsPerPage = 100
 	prReviewsPerPage   = 100
+	prFilesPerPage     = 100
 )
 
 func Sync(ctx context.Context, db *sqlx.DB, repos []config.GitHubRepository, tokens []string) error {
@@ -32,7 +34,11 @@ func Sync(ctx context.Context, db *sqlx.DB, repos []config.GitHubRepository, tok
 		repoCtx := logging.NewContext(ctx, repoLog)
 		repoLog.Info("Syncing repository", "repo", repoIdentifier)
 
-		repo, err := getRepo(repoCtx, tokenManager, repoIdentifier)
+		repo, _, err := getEntity(repoCtx, tokenManager,
+			func(ctx context.Context, client *github.Client) (*github.Repository, *github.Response, error) {
+				return client.Repositories.Get(repoCtx, repoIdentifier.Owner(), repoIdentifier.Name())
+			},
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to get repository")
 		}
@@ -77,7 +83,7 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 	var latestPr *pullRequest
 
 	for {
-		prs, resp, err := listEntities(ctx, tokenManager, repo,
+		prs, resp, err := listEntities(ctx, tokenManager,
 			func(ctx context.Context, client *github.Client) ([]*github.PullRequest, *github.Response, error) {
 				return client.PullRequests.List(ctx, *repo.Owner.Login, *repo.Name, opt)
 			},
@@ -87,14 +93,29 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 		}
 		// Filter out pull requests that were already synced
 		prsToSync := lo.Filter(prs, func(pr *github.PullRequest, _ int) bool {
+			prUpdatedAt := pr.GetUpdatedAt()
+			syncEarliestTime := time.Now().UTC().Add(-syncBackTime)
+			if prUpdatedAt.Before(syncEarliestTime) {
+				return false
+			}
 			if lastSynced == nil {
 				return true
 			}
-			return pr.GetUpdatedAt().After(*lastSynced)
+			return prUpdatedAt.After(*lastSynced)
 		})
 		if len(prsToSync) == 0 {
-			log.Info("No new pull requests found")
-			break
+			if direction == "desc" {
+				log.Info("No new pull requests found")
+				break
+			} else {
+				lastPr := prs[len(prs)-1]
+				log.Info("Skipped all pull requests in page, moving to next page", "last_pr_updated_at", lastPr.UpdatedAt)
+				if resp.NextPage == 0 {
+					break
+				}
+				opt.Page = resp.NextPage
+				continue
+			}
 		}
 
 		pullRequests, err := syncPullRequestsChunk(ctx, db, tokenManager, repo, prsToSync)
@@ -115,9 +136,11 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 			}
 		}
 
-		if len(prsToSync) < len(prs) { // If we filtered, it means we reached the last page
-			log.Info("Reached last synced time", "last_synced", lastSynced)
-			break
+		if direction == "desc" {
+			if len(prsToSync) < len(prs) { // If we filtered, it means we reached the last page
+				log.Info("Reached last synced time", "last_synced", lastSynced)
+				break
+			}
 		}
 		if resp.NextPage == 0 {
 			break
@@ -205,6 +228,12 @@ func enrichPullRequest(ctx context.Context, tokenManager *TokenManager,
 		pr.LastReadyForReviewAt = &lastReadyForReviewEvent.CreatedAt.Time
 	}
 
+	additions, deletions, numberOfChangedFiles, err := getPRFileChanges(ctx, tokenManager, repo, pr.Number)
+	if err != nil {
+		return errors.Wrap(err, "failed to get pull request file changes")
+	}
+	pr.Additions, pr.Deletions, pr.ChangedFiles = additions, deletions, numberOfChangedFiles
+
 	return nil
 }
 
@@ -215,7 +244,7 @@ func getLastReadyForReviewEvent(ctx context.Context, tokenManager *TokenManager,
 	opt := &github.ListOptions{PerPage: issueEventsPerPage}
 	for {
 		// default order is desc so we get the latest events first
-		prEvents, resp, err := listEntities(ctx, tokenManager, repo,
+		prEvents, resp, err := listEntities(ctx, tokenManager,
 			func(ctx context.Context, client *github.Client) ([]*github.IssueEvent, *github.Response, error) {
 				return client.Issues.ListIssueEvents(ctx, *repo.Owner.Login, *repo.Name, prNumber, opt)
 			},
@@ -237,11 +266,36 @@ func getLastReadyForReviewEvent(ctx context.Context, tokenManager *TokenManager,
 	return lastReadyForReviewEvent, nil
 }
 
+func getPRFileChanges(ctx context.Context, tokenManager *TokenManager, repo *github.Repository, prNumber int) (int, int, int, error) {
+	additions, deletions, numberOfFiles := 0, 0, 0
+	opts := &github.ListOptions{PerPage: prFilesPerPage}
+	for {
+		files, res, err := listEntities(ctx, tokenManager,
+			func(ctx context.Context, client *github.Client) ([]*github.CommitFile, *github.Response, error) {
+				return client.PullRequests.ListFiles(ctx, *repo.Owner.Login, *repo.Name, prNumber, opts)
+			},
+		)
+		if err != nil {
+			return 0, 0, 0, errors.Wrap(err, "failed to get pull request files")
+		}
+		for _, file := range files {
+			additions += file.GetAdditions()
+			deletions += file.GetDeletions()
+		}
+		numberOfFiles += len(files)
+		if res.NextPage == 0 {
+			break
+		}
+		opts.Page = res.NextPage
+	}
+	return additions, deletions, numberOfFiles, nil
+}
+
 func syncPullRequestReviews(ctx context.Context, db *sqlx.DB, tokenManager *TokenManager, repo *github.Repository, pr *pullRequest) error {
 	opt := &github.ListOptions{PerPage: prReviewsPerPage}
 	for {
 		// default order is desc so we get the latest events first
-		reviews, resp, err := listEntities(ctx, tokenManager, repo,
+		reviews, resp, err := listEntities(ctx, tokenManager,
 			func(ctx context.Context, client *github.Client) ([]*github.PullRequestReview, *github.Response, error) {
 				return client.PullRequests.ListReviews(ctx, *repo.Owner.Login, *repo.Name, pr.Number, opt)
 			},

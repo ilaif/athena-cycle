@@ -13,11 +13,11 @@ func upsertPullRequests(ctx context.Context, db *sqlx.DB, pullRequests []*pullRe
 	}
 	if _, err := db.NamedExecContext(ctx, `
 			INSERT INTO pull_requests (
-				pr_id, repo, repo_id, number, username, title, body, state, draft,
+				pr_id, repo, repo_id, number, username, title, body, state, draft, additions, deletions, changed_files,
 				merged_at, created_at, updated_at, last_ready_for_review_at, data
 			)
 			VALUES (
-				:pr_id, :repo, :repo_id, :number, :username, :title, :body, :state, :draft,
+				:pr_id, :repo, :repo_id, :number, :username, :title, :body, :state, :draft, :additions, :deletions, :changed_files,
 				:merged_at, :created_at, :updated_at, :last_ready_for_review_at, :data
 			)
 			ON CONFLICT (pr_id) DO UPDATE
@@ -29,6 +29,9 @@ func upsertPullRequests(ctx context.Context, db *sqlx.DB, pullRequests []*pullRe
 				body = EXCLUDED.body,
 				state = EXCLUDED.state,
 				draft = EXCLUDED.draft,
+				additions = EXCLUDED.additions,
+				deletions = EXCLUDED.deletions,
+				changed_files = EXCLUDED.changed_files,
 				merged_at = EXCLUDED.merged_at,
 				created_at = EXCLUDED.created_at,
 				updated_at = EXCLUDED.updated_at,

@@ -16,6 +16,9 @@ type pullRequest struct {
 	Body                 *string             `db:"body"`
 	State                string              `db:"state"`
 	Draft                bool                `db:"draft"`
+	Additions            int                 `db:"additions"`
+	Deletions            int                 `db:"deletions"`
+	ChangedFiles         int                 `db:"changed_files"`
 	MergedAt             *time.Time          `db:"merged_at"`
 	CreatedAt            time.Time           `db:"created_at"`
 	UpdatedAt            time.Time           `db:"updated_at"`

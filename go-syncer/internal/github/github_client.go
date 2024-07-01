@@ -46,7 +46,7 @@ func handleRateLimit(ctx context.Context, resp *github.Response, tokenManager *T
 		return errors.New("other than rate limit exceeded forbidden error")
 	}
 
-	log.Info("Rate limit exceeded, rotating token", "reset_time", rateLimit.Reset.String(), "response", resp)
+	log.Info("Rate limit exceeded, rotating token", "reset_time", rateLimit.Reset.String())
 	tokenManager.RotateToken()
 	if tokenManager.IsExhausted() {
 		const backoffBuffer = 10 * time.Second
