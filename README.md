@@ -18,7 +18,7 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
    1. GitHub integration:
       1. Get a `GITHUB_TOKEN`
       2. Set `GITHUB_REPOSITORIES` to a JSON list of repositories to sync (e.g. `appsmithorg/appsmith,appsmithorg/appsmith-server`)
-2. Run `touch syncer/.env` (You can also use that to provide the environment variables)
+2. Run `touch ./go-syncer/.env` (You can also use that to provide the environment variables)
 3. Run `docker-compose up -d`
 
 #### Kubernetes
@@ -57,7 +57,6 @@ Athena cycle is an SDLC (Software Development Lifecycle) tracking/management sys
 
 5. Install syncer:
 
-   1. cd to `syncer/`
    2. Populate `GITHUB_REPOSITORIES` in `deployment/syncer.yml`
    3. Run `kustomize build ./deployment | kubectl apply -f -`
 

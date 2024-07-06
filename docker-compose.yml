@@ -31,9 +31,9 @@ services:
 
   # syncer: # python version
   #   build:
-  #     context: syncer
+  #     context: ./python-syncer
   #   depends_on: [postgresql]
-  #   env_file: syncer/.env
+  #   env_file: ./python-syncer/.env
   #   restart: always
   #   environment:
   #     - JIRA_USERNAME=${JIRA_USERNAME:-}

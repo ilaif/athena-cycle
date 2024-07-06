@@ -17,7 +17,6 @@ spec:
           image: ifallach/athena-cycle-syncer:main
           imagePullPolicy: Always
           env:
-            # TODO: update this
             - name: GITHUB_REPOSITORIES
               value: "org/repo-name" # Replace with your repository names
             - name: GITHUB_TOKENS
