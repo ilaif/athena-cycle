@@ -13,5 +13,8 @@ jobs:
         with: { go-version: 1.21.6 }
       - run: go mod tidy
         working-directory: ./go-syncer
-      - run: make lint
-        working-directory: ./go-syncer
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: "v1.57.2"
+          working-directory: ./go-syncer
