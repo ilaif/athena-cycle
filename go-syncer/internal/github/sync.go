@@ -36,7 +36,7 @@ func Sync(ctx context.Context, db *sqlx.DB, repos []config.GitHubRepository, tok
 
 		repo, _, err := getEntity(repoCtx, tokenManager,
 			func(ctx context.Context, client *github.Client) (*github.Repository, *github.Response, error) {
-				return client.Repositories.Get(repoCtx, repoIdentifier.Owner(), repoIdentifier.Name())
+				return client.Repositories.Get(ctx, repoIdentifier.Owner(), repoIdentifier.Name())
 			},
 		)
 		if err != nil {
@@ -107,15 +107,15 @@ func syncRepoPullRequests(ctx context.Context, db *sqlx.DB, tokenManager *TokenM
 			if direction == "desc" {
 				log.Info("No new pull requests found")
 				break
-			} else {
-				lastPr := prs[len(prs)-1]
-				log.Info("Skipped all pull requests in page, moving to next page", "last_pr_updated_at", lastPr.UpdatedAt)
-				if resp.NextPage == 0 {
-					break
-				}
-				opt.Page = resp.NextPage
-				continue
 			}
+
+			lastPr := prs[len(prs)-1]
+			log.Info("Skipped all pull requests in page, moving to next page", "last_pr_updated_at", lastPr.UpdatedAt)
+			if resp.NextPage == 0 {
+				break
+			}
+			opt.Page = resp.NextPage
+			continue
 		}
 
 		pullRequests, err := syncPullRequestsChunk(ctx, db, tokenManager, repo, prsToSync)

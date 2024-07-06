@@ -10,15 +10,19 @@ run:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-dirs:
+    - "tmp"
 linters:
   enable-all: true
   disable:
     - copyloopvar
+    - cyclop
     - deadcode
     - depguard
     - dupl
     - exhaustivestruct
     - exhaustruct
+    - gocognit
     - golint
     - ifshort
     - interfacer
